@@ -1,28 +1,40 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { encodeSession, SESSION_COOKIE_NAME } from "@/lib/auth-session";
 
-import { NextRequest, NextResponse } from "next/server";
 export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ provider: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ provider: string }> }
 ) {
-    const { provider } = await params;
+  const { provider } = await params;
+  const normalizedProvider = provider.toLowerCase();
 
-  // rest of your existing code
-  }
-  const provider = params.provider.toLowerCase();
-  if (provider !== "google" && provider !== "github") {
-    return NextResponse.json({ detail: "Unsupported provider." }, { status: 400 });
+  if (
+    normalizedProvider !== "google" &&
+    normalizedProvider !== "github"
+  ) {
+    return NextResponse.json(
+      { detail: "Unsupported provider." },
+      { status: 400 }
+    );
   }
 
-  const response = NextResponse.redirect(new URL("/dashboard", process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"));
+  const response = NextResponse.redirect(
+    new URL(
+      "/dashboard",
+      process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
+    )
+  );
+
   response.cookies.set({
     name: SESSION_COOKIE_NAME,
     value: encodeSession({
-      email: `${provider}@resumepro.app`,
-      name: provider === "google" ? "Google User" : "GitHub User",
-      provider: provider as "google" | "github",
+      email: `${normalizedProvider}@resumepro.app`,
+      name:
+        normalizedProvider === "google"
+          ? "Google User"
+          : "GitHub User",
+      provider: normalizedProvider as "google" | "github",
       createdAt: new Date().toISOString(),
     }),
     httpOnly: true,
@@ -31,5 +43,6 @@ export async function GET(
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   });
+
   return response;
 }

@@ -2,7 +2,15 @@ import { NextResponse } from "next/server";
 
 import { encodeSession, SESSION_COOKIE_NAME } from "@/lib/auth-session";
 
-export async function GET(_: Request, { params }: { params: { provider: string } }) {
+import { NextRequest, NextResponse } from "next/server";
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ provider: string }> }
+) {
+    const { provider } = await params;
+
+  // rest of your existing code
+  }
   const provider = params.provider.toLowerCase();
   if (provider !== "google" && provider !== "github") {
     return NextResponse.json({ detail: "Unsupported provider." }, { status: 400 });

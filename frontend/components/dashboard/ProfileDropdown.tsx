@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown, LogOut, Settings, UserCircle2 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -13,8 +15,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { fetchProfile, logout } from "@/lib/api";
+import type { ProfileResponse } from "@/lib/types";
 
 export default function ProfileDropdown() {
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    void fetchProfile().then(setProfile).catch(() => setProfile(null));
+  }, []);
+
+  const initials = profile?.full_name
+    .split(" ")
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "AR";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -27,12 +45,12 @@ export default function ProfileDropdown() {
       >
         <Avatar size="sm">
           <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-blue-500 text-[0.68rem] font-semibold text-slate-950">
-            KV
+            {initials}
           </AvatarFallback>
         </Avatar>
         <div className="hidden sm:block">
-          <div className="text-sm font-medium text-white">Kushal Verma</div>
-          <div className="text-xs text-slate-400">kushal@resumepro.app</div>
+          <div className="text-sm font-medium text-white">{profile?.full_name || "AI Resume Analyzer"}</div>
+          <div className="text-xs text-slate-400">{profile?.email || "signed in session"}</div>
         </div>
         <ChevronDown className="size-4 text-slate-400" />
       </DropdownMenuTrigger>
@@ -63,9 +81,10 @@ export default function ProfileDropdown() {
         </DropdownMenuItem>
         <DropdownMenuSeparator className="my-2 bg-white/10" />
         <DropdownMenuItem
-          render={
-            <Link href="/login" className="flex items-center gap-2 rounded-xl px-2 py-2 text-sm text-rose-200 outline-none" />
-          }
+          onClick={async () => {
+            await logout();
+            router.push("/login");
+          }}
         >
           <LogOut className="size-4" />
           Logout

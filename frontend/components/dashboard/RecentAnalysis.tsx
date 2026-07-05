@@ -1,11 +1,46 @@
 import Link from "next/link";
 
-import { recentAnalyses } from "@/lib/dashboard-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function RecentAnalysis() {
+type RecentAnalysisEntry = {
+  title: string;
+  company: string;
+  score: number;
+  status: string;
+  date: string;
+};
+
+type RecentAnalysisProps = {
+  items?: RecentAnalysisEntry[];
+};
+
+const fallbackItems: RecentAnalysisEntry[] = [
+  {
+    title: "Senior Product Designer Resume",
+    company: "Nova Labs",
+    score: 92,
+    status: "Interview Ready",
+    date: "Today",
+  },
+  {
+    title: "Frontend Engineer Portfolio",
+    company: "Arc Systems",
+    score: 88,
+    status: "Strong Match",
+    date: "Yesterday",
+  },
+  {
+    title: "Design Systems Lead Resume",
+    company: "Orbit Health",
+    score: 84,
+    status: "Needs Refinement",
+    date: "2 days ago",
+  },
+];
+
+export default function RecentAnalysis({ items = fallbackItems }: RecentAnalysisProps) {
   return (
     <Card className="border-white/10 bg-white/[0.04]">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
@@ -18,7 +53,7 @@ export default function RecentAnalysis() {
         </Button>
       </CardHeader>
       <CardContent className="space-y-3 pb-5">
-        {recentAnalyses.map((item) => (
+        {items.map((item) => (
           <div key={item.title} className="rounded-2xl border border-white/10 bg-[#070d1a] px-4 py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>

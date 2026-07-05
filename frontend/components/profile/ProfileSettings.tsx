@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, MoonStar, ShieldCheck, Smartphone, UserCircle2 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -8,11 +9,64 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { fetchProfile, logout, updateProfile } from "@/lib/api";
+import type { ProfileResponse } from "@/lib/types";
 
 export default function ProfileSettings() {
   const [theme, setTheme] = useState<"Dark" | "Dim">("Dark");
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [pushAlerts, setPushAlerts] = useState(false);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const response = await fetchProfile();
+        setProfile(response);
+        setTheme(response.theme === "Dim" ? "Dim" : "Dark");
+        setEmailAlerts(response.email_notifications);
+        setPushAlerts(response.push_notifications);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadProfile();
+  }, []);
+
+  const persistProfile = async (updates: Partial<ProfileResponse>) => {
+    if (!profile) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await updateProfile({
+        full_name: updates.full_name ?? profile.full_name,
+        email: updates.email ?? profile.email,
+        headline: updates.headline ?? profile.headline,
+        bio: updates.bio ?? profile.bio,
+        theme: updates.theme ?? profile.theme,
+        email_notifications: updates.email_notifications ?? profile.email_notifications,
+        push_notifications: updates.push_notifications ?? profile.push_notifications,
+      });
+      setProfile(response);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
+
+  if (loading || !profile) {
+    return <div className="py-6 text-sm text-slate-400">Loading profile...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -24,14 +78,19 @@ export default function ProfileSettings() {
           <div className="flex items-center gap-4">
             <Avatar size="lg">
               <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-blue-500 text-slate-950">
-                KV
+                {profile.full_name
+                  .split(" ")
+                  .slice(0, 2)
+                  .map((part) => part[0])
+                  .join("")
+                  .toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className="text-xl font-semibold text-white">Kushal Verma</div>
-              <div className="text-sm text-slate-400">kushal@resumepro.app</div>
+              <div className="text-xl font-semibold text-white">{profile.full_name}</div>
+              <div className="text-sm text-slate-400">{profile.email}</div>
               <Badge variant="outline" className="mt-2 border-emerald-400/20 bg-emerald-400/10 text-emerald-100">
-                Active subscriber
+                {profile.plan} plan
               </Badge>
             </div>
           </div>
@@ -41,11 +100,11 @@ export default function ProfileSettings() {
           <div className="space-y-3 text-sm text-slate-300">
             <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#070d1a] px-4 py-3">
               <UserCircle2 className="size-4 text-cyan-200" />
-              Product designer focused on modern SaaS interfaces.
+              {profile.headline}
             </div>
             <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#070d1a] px-4 py-3">
               <ShieldCheck className="size-4 text-cyan-200" />
-              Account secured with client-side demo settings.
+              Secure session managed by the dashboard auth flow.
             </div>
           </div>
         </CardContent>
@@ -75,7 +134,11 @@ export default function ProfileSettings() {
         <CardContent className="space-y-4 pb-6">
           <button
             type="button"
-            onClick={() => setEmailAlerts((value) => !value)}
+            onClick={() => {
+              const nextValue = !emailAlerts;
+              setEmailAlerts(nextValue);
+              void persistProfile({ email_notifications: nextValue });
+            }}
             className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-[#070d1a] px-4 py-4 text-left transition-colors hover:border-cyan-400/30 hover:bg-white/[0.04]"
           >
             <span className="flex items-center gap-3 text-sm text-white">
@@ -89,7 +152,11 @@ export default function ProfileSettings() {
 
           <button
             type="button"
-            onClick={() => setPushAlerts((value) => !value)}
+            onClick={() => {
+              const nextValue = !pushAlerts;
+              setPushAlerts(nextValue);
+              void persistProfile({ push_notifications: nextValue });
+            }}
             className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-[#070d1a] px-4 py-4 text-left transition-colors hover:border-cyan-400/30 hover:bg-white/[0.04]"
           >
             <span className="flex items-center gap-3 text-sm text-white">
@@ -112,18 +179,25 @@ export default function ProfileSettings() {
             type="button"
             variant="outline"
             className="w-full justify-start border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.06]"
-            onClick={() => setTheme((current) => (current === "Dark" ? "Dim" : "Dark"))}
+            onClick={() => {
+              const nextTheme = theme === "Dark" ? "Dim" : "Dark";
+              setTheme(nextTheme);
+              void persistProfile({ theme: nextTheme });
+            }}
           >
             <MoonStar className="size-4" />
             {theme} theme
           </Button>
           <div className="rounded-2xl border border-white/10 bg-[#070d1a] px-4 py-4 text-sm text-slate-400">
-            UI-only theme switch for the mock dashboard experience.
+            Theme preference persists to the profile endpoint.
           </div>
+          <Button type="button" variant="outline" className="w-full border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.06]" disabled={saving} onClick={() => void persistProfile({})}>
+            {saving ? "Saving..." : "Save profile settings"}
+          </Button>
         </CardContent>
       </Card>
 
-      <Button type="button" variant="destructive" className="w-full">
+      <Button type="button" variant="destructive" className="w-full" onClick={() => void handleLogout()}>
         Logout
       </Button>
     </div>

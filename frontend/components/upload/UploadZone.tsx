@@ -2,11 +2,13 @@
 
 import { useMemo, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
+import { useRouter } from "next/navigation";
 import { CloudUpload, FileCheck2, FileWarning, LoaderCircle, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import UploadProgress from "@/components/upload/UploadProgress";
+import { analyzeResume, uploadResume } from "@/lib/api";
 
 type UploadState = "idle" | "uploading" | "success" | "error";
 
@@ -14,6 +16,7 @@ const acceptedTypes = ["application/pdf", "application/vnd.openxmlformats-office
 
 export default function UploadZone() {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
   const [state, setState] = useState<UploadState>("idle");
   const [fileName, setFileName] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -22,7 +25,7 @@ export default function UploadZone() {
   const instructions = useMemo(
     () => [
       "Drop a PDF or DOCX resume into the zone below.",
-      "The upload flow is simulated entirely on the client.",
+      "The file is uploaded to the FastAPI backend and parsed server-side.",
       "Validation catches unsupported file types before analysis begins.",
     ],
     []
@@ -40,28 +43,39 @@ export default function UploadZone() {
 
     if (file.size > 15 * 1024 * 1024) {
       setState("error");
-      setErrorMessage("Files larger than 15MB are not supported in this demo.");
+      setErrorMessage("Files larger than 15MB are not supported in this workspace.");
       return false;
     }
 
     return true;
   };
 
-  const simulateUpload = (file: File) => {
+  const simulateUpload = async (file: File) => {
     setState("uploading");
     setFileName(file.name);
     setErrorMessage("");
     setProgress(12);
 
-    const steps = [24, 40, 58, 74, 88, 100];
-    steps.forEach((value, index) => {
-      window.setTimeout(() => {
-        setProgress(value);
-        if (value === 100) {
-          setState("success");
-        }
-      }, (index + 1) * 450);
-    });
+    const progressTimer = window.setInterval(() => {
+      setProgress((current) => Math.min(92, current + 12));
+    }, 240);
+
+    try {
+      const uploaded = await uploadResume(file);
+      setProgress(100);
+      const analysis = await analyzeResume({ uploadId: uploaded.upload_id });
+      window.sessionStorage.setItem(
+        "ai-resume-latest-analysis",
+        JSON.stringify({ uploadId: uploaded.upload_id, filename: uploaded.filename, analysis })
+      );
+      setState("success");
+      router.push(`/analysis?upload_id=${uploaded.upload_id}`);
+    } catch (error) {
+      setState("error");
+      setErrorMessage(error instanceof Error ? error.message : "Unable to upload resume.");
+    } finally {
+      window.clearInterval(progressTimer);
+    }
   };
 
   const handleFile = (file: File | undefined) => {

@@ -14,7 +14,17 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AI Resume Analyzer Pro",
-  description: "Premium AI resume analysis, ATS scoring, and job matching for modern hiring workflows.",
+  description: "Premium AI resume analysis, ATS scoring, job matching, cover letters, and export workflows for modern hiring.",
+  keywords: ["AI resume analyzer", "ATS scoring", "resume builder", "cover letter generator", "job match"],
+  openGraph: {
+    title: "AI Resume Analyzer Pro",
+    description: "Premium AI resume analysis, ATS scoring, job matching, and export workflows.",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

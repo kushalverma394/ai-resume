@@ -6,7 +6,7 @@ export default function SignupPage() {
     <AuthLayout
       eyebrow="Start with a stronger profile"
       title="Create your AI resume workspace."
-      description="Set up a premium resume analysis flow with client-side validation, sharp UI, and no backend dependency yet."
+      description="Set up a premium resume analysis workspace with session-backed access, sharp UI, and live backend flows."
       footerText="Already have an account?"
       footerLinkLabel="Sign in"
       footerLinkHref="/login"

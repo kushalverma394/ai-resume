@@ -5,11 +5,13 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, LoaderCircle, Mail, User } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import SocialLogin from "@/components/auth/SocialLogin";
+import { signup } from "@/lib/api";
 
 const signupSchema = z
   .object({
@@ -34,6 +36,7 @@ export default function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submissionState, setSubmissionState] = useState<"idle" | "success">("idle");
+  const router = useRouter();
 
   const {
     register,
@@ -56,18 +59,10 @@ export default function SignupForm() {
     setSubmissionState("idle");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      if (values.email === "error@example.com") {
-        setError("email", {
-          type: "manual",
-          message: "This demo email is reserved for error-state testing.",
-        });
-        return;
-      }
-
+      await signup(values.name, values.email, values.password, values.confirmPassword);
       reset(values);
       setSubmissionState("success");
+      router.push("/dashboard");
     } catch {
       setError("root", {
         type: "manual",
@@ -94,7 +89,7 @@ export default function SignupForm() {
 
         {submissionState === "success" ? (
           <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100" role="status">
-            Account details validated successfully. Backend authentication is not connected yet.
+            Account created successfully. Redirecting to your workspace.
           </div>
         ) : null}
 

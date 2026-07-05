@@ -1,10 +1,14 @@
-import { dashboardStats } from "@/lib/dashboard-data";
+import { dashboardStats, type StatCard } from "@/lib/dashboard-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function DashboardCards() {
+type DashboardCardsProps = {
+  stats?: StatCard[];
+};
+
+export default function DashboardCards({ stats = dashboardStats }: DashboardCardsProps) {
   return (
     <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {dashboardStats.map((stat) => {
+      {stats.map((stat) => {
         const Icon = stat.icon;
 
         return (

@@ -1,20 +1,80 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, Filter, Search, Trash2 } from "lucide-react";
 
-import { historyRecords, type HistoryRecord } from "@/lib/dashboard-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { deleteHistoryItem, fetchHistory } from "@/lib/api";
+
+type HistoryRecord = {
+  id: string;
+  role: string;
+  company: string;
+  score: number;
+  match: string;
+  date: string;
+  fileType: string;
+};
 
 type SortKey = "date" | "score";
+
+const fallbackItems: HistoryRecord[] = [
+  {
+    id: "AN-1001",
+    role: "Senior Product Designer",
+    company: "Nova Labs",
+    score: 92,
+    match: "94%",
+    date: "Jul 5, 2026",
+    fileType: "PDF",
+  },
+  {
+    id: "AN-1002",
+    role: "Frontend Engineer",
+    company: "Arc Systems",
+    score: 88,
+    match: "89%",
+    date: "Jul 4, 2026",
+    fileType: "DOCX",
+  },
+];
 
 export default function ResumeHistoryTable() {
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("date");
-  const [items, setItems] = useState(historyRecords);
+  const [items, setItems] = useState<HistoryRecord[]>(fallbackItems);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const response = await fetchHistory(50);
+        const mappedItems = response.items.map((item) => ({
+          id: item.analysis_id,
+          role: item.recommended_roles[0] || item.career_level,
+          company: item.filename,
+          score: item.ats_score,
+          match: `${Math.min(100, item.ats_score + 2)}%`,
+          date: new Date(item.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }),
+          fileType: item.content_type.toUpperCase().includes("PDF") ? "PDF" : "DOCX",
+        }));
+
+        if (mappedItems.length > 0) {
+          setItems(mappedItems);
+        }
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Unable to load history.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHistory();
+  }, []);
 
   const filteredItems = useMemo(() => {
     const lowered = query.toLowerCase();
@@ -54,7 +114,14 @@ export default function ResumeHistoryTable() {
   };
 
   const deleteRecord = (id: string) => {
-    setItems((current) => current.filter((record) => record.id !== id));
+    void (async () => {
+      try {
+        await deleteHistoryItem(id);
+        setItems((current) => current.filter((record) => record.id !== id));
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Unable to delete history record.");
+      }
+    })();
   };
 
   return (
@@ -97,6 +164,18 @@ export default function ResumeHistoryTable() {
       </CardHeader>
 
       <CardContent className="overflow-x-auto pb-6">
+        {errorMessage ? (
+          <div className="mb-4 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+            {errorMessage}
+          </div>
+        ) : null}
+
+        {loading ? (
+          <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-6 py-10 text-center text-sm text-slate-400">
+            Loading history...
+          </div>
+        ) : null}
+
         <table className="min-w-full border-separate border-spacing-y-3">
           <thead>
             <tr className="text-left text-xs uppercase tracking-[0.28em] text-slate-500">

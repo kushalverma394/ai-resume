@@ -1,8 +1,10 @@
 import CTA from "@/components/landing/CTA";
+import FAQ from "@/components/landing/FAQ";
 import Features from "@/components/landing/Features";
 import Footer from "@/components/landing/Footer";
 import Hero from "@/components/landing/Hero";
 import Navbar from "@/components/landing/Navbar";
+import Pricing from "@/components/landing/Pricing";
 
 export default function HomePage() {
   return (
@@ -16,6 +18,8 @@ export default function HomePage() {
         <section className="relative mx-auto flex w-full max-w-7xl flex-col gap-24 px-6 pb-24 pt-16 sm:px-8 lg:px-10">
           <Hero />
           <Features />
+          <Pricing />
+          <FAQ />
           <CTA />
         </section>
       </main>

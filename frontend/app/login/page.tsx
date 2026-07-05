@@ -6,7 +6,7 @@ export default function LoginPage() {
     <AuthLayout
       eyebrow="Secure resume workflow"
       title="Sign in to review your resume performance."
-      description="Access ATS scoring, job matches, and improvement suggestions from a clean, focused interface built for fast decisions."
+      description="Access ATS scoring, job matches, improvement suggestions, and export tools from a protected workspace."
       footerText="Need an account?"
       footerLinkLabel="Create one"
       footerLinkHref="/signup"

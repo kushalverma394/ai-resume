@@ -4,10 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type ImprovementSuggestionsProps = {
   recommendations: string[];
-  bulletImprovements: Array<{ before: string; after: string }>;
+  bulletImprovements: Array<{ before: string; after: string }> | string[];
 };
 
 export default function ImprovementSuggestions({ recommendations, bulletImprovements }: ImprovementSuggestionsProps) {
+  const isStructuredBullets = typeof bulletImprovements[0] === "object";
+
   return (
     <Card className="border-white/10 bg-white/[0.04]">
       <CardHeader>
@@ -24,15 +26,22 @@ export default function ImprovementSuggestions({ recommendations, bulletImprovem
         </div>
 
         <div className="space-y-3">
-          {bulletImprovements.map((item) => (
-            <div key={item.before} className="rounded-2xl border border-white/10 bg-[#070d1a] px-4 py-4 text-sm text-slate-300">
-              <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Before</div>
-              <p className="mt-1">{item.before}</p>
-              <ArrowRight className="my-3 size-4 text-cyan-300" />
-              <div className="text-xs uppercase tracking-[0.24em] text-slate-500">After</div>
-              <p className="mt-1 text-white">{item.after}</p>
-            </div>
-          ))}
+          {isStructuredBullets
+            ? (bulletImprovements as Array<{ before: string; after: string }>).map((item) => (
+                <div key={item.before} className="rounded-2xl border border-white/10 bg-[#070d1a] px-4 py-4 text-sm text-slate-300">
+                  <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Before</div>
+                  <p className="mt-1">{item.before}</p>
+                  <ArrowRight className="my-3 size-4 text-cyan-300" />
+                  <div className="text-xs uppercase tracking-[0.24em] text-slate-500">After</div>
+                  <p className="mt-1 text-white">{item.after}</p>
+                </div>
+              ))
+            : (bulletImprovements as string[]).map((item) => (
+                <div key={item} className="rounded-2xl border border-white/10 bg-[#070d1a] px-4 py-4 text-sm text-slate-300">
+                  <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Suggested bullet</div>
+                  <p className="mt-2 text-white">{item}</p>
+                </div>
+              ))}
         </div>
       </CardContent>
     </Card>

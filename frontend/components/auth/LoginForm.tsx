@@ -5,11 +5,13 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, LoaderCircle, Mail } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import SocialLogin from "@/components/auth/SocialLogin";
+import { login } from "@/lib/api";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -22,6 +24,9 @@ type LoginValues = z.infer<typeof loginSchema>;
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [submissionState, setSubmissionState] = useState<"idle" | "success">("idle");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
 
   const {
     register,
@@ -42,18 +47,10 @@ export default function LoginForm() {
     setSubmissionState("idle");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 900));
-
-      if (values.email === "error@example.com") {
-        setError("email", {
-          type: "manual",
-          message: "This demo email is reserved for error-state testing.",
-        });
-        return;
-      }
-
+      await login(values.email, values.password, values.rememberMe);
       reset(values);
       setSubmissionState("success");
+      router.push(redirectTo);
     } catch {
       setError("root", {
         type: "manual",
@@ -80,7 +77,7 @@ export default function LoginForm() {
 
         {submissionState === "success" ? (
           <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100" role="status">
-            Sign in details validated successfully. Backend authentication is not connected yet.
+            Sign in successful. Redirecting to your workspace.
           </div>
         ) : null}
 
@@ -140,7 +137,7 @@ export default function LoginForm() {
               Remember me
             </label>
 
-            <Button type="button" variant="link" className="h-auto p-0 text-cyan-200 hover:text-cyan-100">
+            <Button type="button" variant="link" className="h-auto p-0 text-cyan-200 hover:text-cyan-100" render={<a href="/forgot-password" />}>
               Forgot password?
             </Button>
           </div>

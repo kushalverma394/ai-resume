@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
@@ -9,9 +10,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { dashboardNavItems } from "@/lib/dashboard-data";
+import { fetchProfile } from "@/lib/api";
+import type { ProfileResponse } from "@/lib/types";
 
 function SidebarContent() {
   const pathname = usePathname();
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+
+  useEffect(() => {
+    void fetchProfile().then(setProfile).catch(() => setProfile(null));
+  }, []);
+
+  const initials = profile?.full_name
+    .split(" ")
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "AR";
 
   return (
     <div className="flex h-full flex-col border-r border-white/10 bg-white/[0.03] px-4 py-6 backdrop-blur-xl">
@@ -56,12 +71,12 @@ function SidebarContent() {
         <div className="flex items-center gap-3">
           <Avatar size="lg">
             <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-blue-500 text-slate-950">
-              KV
+              {initials}
             </AvatarFallback>
           </Avatar>
           <div>
-            <div className="text-sm font-medium text-white">Kushal Verma</div>
-            <div className="text-xs text-slate-400">Product Designer</div>
+            <div className="text-sm font-medium text-white">{profile?.full_name || "AI Resume Analyzer"}</div>
+            <div className="text-xs text-slate-400">{profile?.headline || "Product workspace"}</div>
           </div>
         </div>
 

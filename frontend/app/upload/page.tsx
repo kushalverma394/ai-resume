@@ -8,7 +8,7 @@ export default function UploadPage() {
   return (
     <DashboardShell
       title="Upload resume"
-      description="Drop a PDF or DOCX file to start a mock ATS analysis flow with instant validation and progress feedback."
+      description="Drop a PDF or DOCX file to upload, parse, and analyze a resume with live progress feedback."
     >
       <div className="grid gap-6 py-6 xl:grid-cols-[1.2fr_0.8fr]">
         <UploadZone />

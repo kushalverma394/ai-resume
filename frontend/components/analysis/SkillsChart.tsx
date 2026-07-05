@@ -5,7 +5,11 @@ import { ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, Pola
 import { skillChartData } from "@/lib/dashboard-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function SkillsChart() {
+type SkillsChartProps = {
+  data?: Array<{ category: string; score: number }>;
+};
+
+export default function SkillsChart({ data = skillChartData }: SkillsChartProps) {
   return (
     <Card className="border-white/10 bg-white/[0.04]">
       <CardHeader>
@@ -13,7 +17,7 @@ export default function SkillsChart() {
       </CardHeader>
       <CardContent className="h-[22rem] pb-6">
         <ResponsiveContainer width="100%" height="100%">
-          <RadarChart data={skillChartData}>
+          <RadarChart data={data}>
             <PolarGrid stroke="rgba(255,255,255,0.12)" />
             <PolarAngleAxis dataKey="category" tick={{ fill: "#cbd5e1", fontSize: 12 }} />
             <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
